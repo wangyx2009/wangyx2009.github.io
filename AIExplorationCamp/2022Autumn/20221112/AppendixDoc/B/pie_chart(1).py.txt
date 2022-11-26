@@ -1,0 +1,89 @@
+from wordcloud import WordCloud as cloud
+import matplotlib.pyplot as plt
+import numpy as np
+import jieba
+import matplotlib
+
+file = 'E:\python\AI\data'
+film = input("Please input the Name of the film:\n")
+name = input("Please input the Chinese Name of the film:\n")
+file = file+'\\'+film+'(t).txt'
+with open(file=file,mode='r',encoding='utf-8') as word:
+    happy_sad=str()
+    happy_sad = word.readlines()
+    #print(happy_sad)
+
+'''word = list()
+for i in txt:   #分词
+    for j in jieba.lcut(i):
+        if not(j in "！@#￥%……&*（）——+-=~·{}【】|、《》，。？"):
+            word.append(j)
+
+set_word,list_times = set(word),list() #词频
+for i in set_word:
+    times=int()
+    for j in word:
+        if j==i:
+            times+=1
+    list_times.append([i,times])
+print(list_times)
+li = list()
+
+num = len(list_times) #排序
+for i in range(num):
+    a = list_times[i][1]
+    li.append(a)
+for i in range(len(li)-1,0,-1):
+    for j in range(i):
+        if li[j] > li[j+1]:
+            li[j], li[j+1] = li[j+1], li[j]
+li.append(1)
+word,front10 = li[-11:-1],str()
+for i in list_times:
+    for j in word:
+        if i[1]==j:
+            word2 = i[0]
+    front10 = front10+' '+word2
+
+x, y = np.ogrid[:300, :300] #快速产生一对数组
+mask = (x - 150) ** 2 + (y - 150) ** 2 > 130 ** 2 #此时mask是bool型(词云)
+mask = 255 * mask.astype(int) #变量类型转换为int型
+clou = cloud(font_path='MSYH.ttf',\
+            width=1000,\
+            height=1000,\
+             mask=mask)
+clou.generate(txt)
+plt.axis("off")
+clou.background_color='white'
+clou.to_file("outfile.png")
+plt.show()'''
+
+for i in happy_sad:
+    try:
+        happy_sad.append(i.split(',')[2])
+    except:
+        pass
+middle,down,up = int(),int(),int()
+#print(happy_sad)
+'''for i in thinks:
+    if 0.4<=float(i)<=0.5:
+        middle+=1
+    if float(i)<=0.4:
+        down+=1
+    if float(i)>=0.5:
+        up+=1'''
+for i in happy_sad:
+    if i=='消极\n':
+        down+=1
+    elif i=='中性\n':
+        middle+=1
+    elif i=='积极\n':
+        up+=1
+plt.pie(x=[down,middle,up],\
+labels=['消极','中性','积极'],\
+autopct='%0.1f%%',\
+shadow=True)
+matplotlib.rcParams['font.sans-serif']=['Microsoft Yahei']
+plt.title("{}弹幕感情分析".format(name))
+plt.show()
+plt.show()
