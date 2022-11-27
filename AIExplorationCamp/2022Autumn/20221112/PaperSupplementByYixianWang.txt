@@ -1,0 +1,136 @@
+【1. 将每个存储弹幕的.csv文件中多行弹幕数据转换为单行弹幕数据，并存储到的.txt文件中。】
+---代码---
+import csv
+
+
+fNLs = ['人生大事', '奇迹·笨小孩', '我和我的父辈', '爱情神话', '狙击手', '长津湖']
+
+for fN in fNLs:
+    s = ''
+
+    with open('电影弹幕/《{}》弹幕.csv'.format(fN), 'r', newline='', encoding='utf-8') as f1:
+        reader = csv.reader(f1)
+        for r in reader:
+            s += r[0]
+
+    with open('电影单行弹幕/《{}》单行弹幕.txt'.format(fN), 'w', encoding='utf-8') as f2:
+        f2.write(s)
+
+
+
+【2. 读取.txt文件中的单行弹幕数据，清洗数据并对数据进行分词。】
+---代码---
+...
+for fN in fNLs:
+    ...
+
+    # 过滤无意义的词、符号与数字
+    f = open('chineseStopWords.txt', 'r', encoding='gb18030')
+    stop_data1 = list(f.read())
+    f.close()
+    stop_data2 = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    s2 = ''
+    for s in s1:
+        if s not in stop_data1 or s not in stop_data2:
+            s2 += s
+
+    barrageLs = jieba.lcut(s2)
+    s3 = ' '.join(barrageLs)
+
+    ...
+
+注：这里过滤掉了标点符号、常用语气词以及数字。
+
+
+
+【3. 对分词后的数据进行词频统计和感情分析。】
+---代码---
+...
+from snownlp import SnowNLP
+
+
+...
+
+for fN in fNLs:
+    ...
+
+    wordLs = s1.split(' ')
+
+    # 词频统计
+    wordsTimes = []
+    wordTimes = {}
+    for word in wordLs:
+        if word in wordTimes:
+            wordTimes[word] += 1
+        else:
+            wordTimes[word] = 1
+    for wordTKey in wordTimes:
+        wordsT = {'词语': wordTKey, '词频': wordTimes[wordTKey]}
+        wordsTimes.append(wordsT)
+    ...
+
+【首先每个词语以 {词语: 词频} 的字典wordTimes进行存储，整理后通过以 {'词语': 词语, '词频', 词频} 的字典wordT进行存储，并且放入列表wordTimes中。】
+
+
+
+【4. 感情分析】
+
+【以进行词频统计时所存储的词语作为进行感情分析的词语】
+【首先每个词语以 {词语: 感情值} 的字典wordSent进行存储，整理后通过以 {'词语': 词语, '词频', 词频} 的字典wordsS进行存储，并且放入列表wordsSent中。】
+【中途，当程序识别到要进行感情分析的内容是空白一片，没有任何字符（没有空格或空行），计算感情分析会触发ZeroDivisionError。为了避免这种情况，我们把计算感情值的部分放入try...except...语句中，触发ZeroDivisionError时会跳过，并且不影响进行其他内容的感情分析。】
+
+---代码---
+...
+    ...
+    wordLsN = []
+    for wordN in wordTimes:
+        wordLsN.append(wordN)
+    wordsSent = []
+    wordSent = {}
+    for wordN in wordLsN:
+        try:
+            sent = SnowNLP(wordN).sentiments
+            wordSent[wordN] = sent
+        except ZeroDivisionError:
+            pass
+    for wordSKey in wordSent:
+        wordsS = {'词语': wordSKey, '感情值': wordSent[wordSKey]}
+        wordsSent.append(wordsS)
+    ...
+
+【但是，我们发现弹幕中出现地名的次数有不少，可感情值被判断为0.4多，被认定为消极词汇。为了更加准确的判断整条弹幕所抒发的感情，我们决定对整句进行感情分析。】
+
+---代码---
+...
+
+for fN in fNLs:
+    # 读取弹幕
+    ...
+
+    # 获取感情值，感情分析
+    sentencesSent = []
+    sentenceSent = {}
+    for sentence0 in sentenceLs:
+        sentence = sentence0[0]
+        try:
+            sent = SnowNLP(sentence).sentiments
+            if sent >= 0.6:
+                emotionalAnalysis = '积极'
+            elif 0.4 <= sent < 0.6:
+                emotionalAnalysis = '中性'
+            elif sent < 0.4:
+                emotionalAnalysis = '消极'
+            sentenceSent[sentence] = [sent, emotionalAnalysis]
+        except ZeroDivisionError:
+            pass
+
+    # 整理感情值与感情分析
+    for sentenceSKey in sentenceSent:
+        sentencesS = {'弹幕': sentenceSKey, '感情值': sentenceSent[sentenceSKey][0], '感情分析': sentenceSent[sentenceSKey][1]}
+        sentencesSent.append(sentencesS)
+    # 保存感情值与感情分析
+    ...
+
+【和前文一样，我们还需要把计算感情值的部分放入try...except...语句中。】
+【这次，我们把中性词语的感情值范围扩大到大于等于0.4，小于0.6的区域内，这里需要使用到if语句。我们把感情分析结果（即“积极”“中性”“消极”）存入到变量emotionalAnalysis中。】
+【另外，首先每个词语以 {词语: 感情值} 的字典sentenceSent进行存储，整理后通过以 {'词语': 词语, '感情值', 感情值, '感情分析', 感情分析结果} 的字典sentencesS进行存储，并且放入列表sentencesSent中。】
