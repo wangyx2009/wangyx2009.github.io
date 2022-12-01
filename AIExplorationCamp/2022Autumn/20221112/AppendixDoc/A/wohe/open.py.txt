@@ -1,0 +1,14 @@
+import pandas as pd
+import requests
+import time
+headers={'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36'}
+danmus=[]
+for i in range(0,158):
+    print(f'finding {i}')
+    resposen = requests.get(f'https://bullet-ws.hitv.com/bullet/2022/11/12/201828/15380241/{i}.json',headers=headers)
+    for e in resposen.json()['data']['items']:
+        content=e['content']
+        danmus.append(content)
+df=pd.DataFrame({'弹幕':danmus})
+df.to_csv('./danmu.csv',
+          encoding='utf-8-sig', index=False)
